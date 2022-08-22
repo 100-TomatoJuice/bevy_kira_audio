@@ -15,9 +15,11 @@ use bevy::ecs::change_detection::{NonSendMut, ResMut};
 use bevy::ecs::system::{NonSend, Res, Resource};
 use bevy::ecs::world::{FromWorld, World};
 use bevy::log::{error, warn};
+use kira::clock::ClockHandle;
 use kira::manager::backend::{Backend, DefaultBackend};
+use kira::manager::error::AddClockError;
 use kira::manager::AudioManager;
-use kira::{CommandError, PlaybackRate, Volume};
+use kira::{ClockSpeed, CommandError, PlaybackRate, Volume};
 use std::collections::HashMap;
 
 /// Non-send resource that acts as audio output
@@ -33,6 +35,7 @@ pub(crate) struct AudioOutput<B: Backend = DefaultBackend> {
 impl FromWorld for AudioOutput {
     fn from_world(world: &mut World) -> Self {
         let settings = world.remove_resource::<AudioSettings>().unwrap_or_default();
+
         let manager = AudioManager::new(settings.into());
         if let Err(ref setup_error) = manager {
             warn!("Failed to setup audio: {:?}", setup_error);
@@ -391,6 +394,10 @@ impl<B: Backend> AudioOutput<B> {
                 }
             });
         }
+    }
+
+    pub(crate) fn add_clock(&mut self, speed: ClockSpeed) -> Result<ClockHandle, AddClockError> {
+        self.manager.as_mut().unwrap().add_clock(speed)
     }
 }
 

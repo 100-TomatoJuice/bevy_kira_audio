@@ -38,6 +38,7 @@ mod audio;
 mod audio_output;
 mod backend_settings;
 mod channel;
+mod clock;
 mod instance;
 mod source;
 mod spacial;
@@ -48,6 +49,8 @@ pub use audio::{
 };
 pub use backend_settings::AudioSettings;
 pub use channel::AudioControl;
+pub use clock::AudioClock;
+pub use kira::{clock::ClockTime, ClockSpeed, StartTime};
 pub use source::AudioSource;
 
 /// Most commonly used types

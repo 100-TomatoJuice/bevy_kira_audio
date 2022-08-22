@@ -1,8 +1,9 @@
 //! Common audio types
 
-use crate::audio_output::{play_audio_channel, update_instance_states};
+use crate::audio_output::{play_audio_channel, update_instance_states, AudioOutput};
 use crate::channel::typed::AudioChannel;
 use crate::channel::AudioCommandQue;
+use crate::clock::AudioClock;
 use crate::instance::AudioInstance;
 use crate::source::AudioSource;
 use crate::AudioSystemSet;
@@ -11,7 +12,7 @@ use bevy::asset::{Handle, HandleId};
 use bevy::ecs::system::Resource;
 use bevy::prelude::{default, IntoSystemConfig};
 use kira::sound::static_sound::{StaticSoundData, StaticSoundHandle};
-use kira::{LoopBehavior, Volume};
+use kira::{ClockSpeed, LoopBehavior, StartTime, Volume};
 use std::marker::PhantomData;
 use std::time::Duration;
 
@@ -34,6 +35,7 @@ pub(crate) struct PartialSoundSettings {
     pub(crate) panning: Option<f64>,
     pub(crate) reverse: Option<bool>,
     pub(crate) fade_in: Option<AudioTween>,
+    pub(crate) start_time: Option<StartTime>,
 }
 
 /// Different kinds of easing for fade-in and fade-out
@@ -130,6 +132,9 @@ impl PartialSoundSettings {
                 ..default()
             });
         }
+        if let Some(start_time) = self.start_time {
+            sound.settings.start_time = start_time;
+        }
     }
 }
 
@@ -205,6 +210,13 @@ impl<'a> PlayAudioCommand<'a> {
     /// Start the sound from the given position in seconds.
     pub fn start_from(&mut self, start_position: f64) -> &mut Self {
         self.settings.start_position = Some(start_position);
+
+        self
+    }
+
+    /// TODO: Docs
+    pub fn start_time(&mut self, start_time: StartTime) -> &mut Self {
+        self.settings.start_time = Some(start_time);
 
         self
     }
@@ -436,6 +448,9 @@ pub trait AudioApp {
     /// struct Background;
     /// ```
     fn add_audio_channel<T: Resource>(&mut self) -> &mut Self;
+
+    /// TODO: Docs
+    fn add_audio_clock<T: Resource>(&mut self, speed: ClockSpeed) -> &mut Self;
 }
 
 impl AudioApp for App {
@@ -451,5 +466,11 @@ impl AudioApp for App {
                 .after(AudioSystemSet::InstanceCleanup),
         )
         .insert_resource(AudioChannel::<T>::default())
+    }
+
+    fn add_audio_clock<T: Resource>(&mut self, speed: ClockSpeed) -> &mut Self {
+        let mut output = self.world.non_send_resource_mut::<AudioOutput>();
+        let clock = output.add_clock(speed).unwrap();
+        self.insert_resource(AudioClock::<T>::new(clock))
     }
 }
