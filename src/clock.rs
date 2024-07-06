@@ -22,6 +22,16 @@ impl<T> AudioClock<T> {
     pub fn handle(&self) -> &ClockHandle {
         &self.handle
     }
+
+    /// How much time has passed since the start of the clock.
+    pub fn elapsed_time(&self) -> f64 {
+        self.handle.time().ticks as f64 + self.fractional_position()
+    }
+
+    /// How many ticks have passed since the start of the clock.
+    pub fn elapsed_ticks(&self) -> u64 {
+        self.handle.time().ticks
+    }
 }
 
 impl<T> Deref for AudioClock<T> {

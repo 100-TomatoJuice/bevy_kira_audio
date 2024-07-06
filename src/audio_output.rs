@@ -459,14 +459,14 @@ mod test {
     use bevy::prelude::*;
     use kira::manager::backend::mock::MockBackend;
     use kira::manager::AudioManagerSettings;
+    type AudioSource = crate::prelude::AudioSource;
 
     #[test]
     fn keeps_order_of_commands_to_retry() {
         // we only need this app to conveniently get a assets collection for `AudioSource`...
         let mut app = App::new();
-        app.add_plugins(MinimalPlugins)
-            .add_plugin(AssetPlugin::default())
-            .add_plugin(AudioPlugin);
+        app.add_plugins((MinimalPlugins, AssetPlugin::default(), AudioPlugin));
+
         let audio_source_assets = app.world.remove_resource::<Assets<AudioSource>>().unwrap();
         let mut audio_instance_assets = app
             .world
@@ -510,8 +510,8 @@ mod test {
         // we only need this app to conveniently get a assets collection for `AudioSource`...
         let mut app = App::new();
         app.add_plugins(MinimalPlugins)
-            .add_plugin(AssetPlugin::default())
-            .add_plugin(AudioPlugin);
+            .add_plugins(AssetPlugin::default())
+            .add_plugins(AudioPlugin);
         let audio_source_assets = app.world.remove_resource::<Assets<AudioSource>>().unwrap();
         let mut audio_instance_assets = app
             .world
